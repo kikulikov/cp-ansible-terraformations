@@ -1,13 +1,40 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # TODO
-# 1. extract variable
+# 1. Extract Variables
+# 1. aws_key_pair from file
 # 2. Namings
 # 3. Documentation
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Setting up inputs
+
+variable "resource_name" {
+  default = "kirill-kulikov-cp"
+}
+
+variable "resource_owner" {
+  default = "Kirill Kulikov"
+}
+
+variable "public_ssh_key" {
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCgabMpBLAUm8mqkRyysIp6xllh9rQDQ0JqGGK2UOPMUeq7j8EQpOq8yGahBOCjnA0KbP6pXcWqZO7H2FOyNYom+RcsKDdorOF8zmn7L8iKKFFtQjmEaiRi+O9ndYVm6gxBIZX4S0eQRPiwVjNE2ARt4AWfXPMTiQZmXf7vPxeRWsRwIDhLxEjM6Esw/Sytd3rMiZF5fkybHhqKDKZ7GlbUGngZdlK9w8AItZEYThknKvCkdt50ntZFjL3+b7ROW2RGm89kbA+j4w0gaDzCFgN/BRiKeoGblRXfHBSu7qOMARhcdO34DohGHRyjpz8utVzSN74sjUZw41C8vV25MMpT"
+}
+
+variable "aws_region" {
+  default = "eu-west-2"
+}
+
+variable "aws_availability_zone" {
+  default = "eu-west-2c"
+}
+
+variable "ec2_instance_count" {
+  default = "4"
+}
+
 // Setting up AWS provider
 provider "aws" {
-  region = "eu-west-2"
+  region = "${var.aws_region}"
 }
 
 // Setting up VPC
@@ -16,8 +43,8 @@ resource "aws_vpc" "kirill-kulikov-cp" {
   enable_dns_hostnames = true
   enable_dns_support   = true
   tags = {
-    Name  = "kirill-kulikov-cp"
-    Owner = "Kirill Kulikov"
+    Name  = "${var.resource_name}"
+    Owner = "${var.resource_owner}"
   }
 }
 
@@ -27,13 +54,13 @@ resource "aws_vpc" "kirill-kulikov-cp" {
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCgabMpBLAUm8mqkRyysIp6xllh9rQDQ0JqGGK2UOPMUeq7j8EQpOq8yGahBOCjnA0KbP6pXcWqZO7H2FOyNYom+RcsKDdorOF8zmn7L8iKKFFtQjmEaiRi+O9ndYVm6gxBIZX4S0eQRPiwVjNE2ARt4AWfXPMTiQZmXf7vPxeRWsRwIDhLxEjM6Esw/Sytd3rMiZF5fkybHhqKDKZ7GlbUGngZdlK9w8AItZEYThknKvCkdt50ntZFjL3+b7ROW2RGm89kbA+j4w0gaDzCFgN/BRiKeoGblRXfHBSu7qOMARhcdO34DohGHRyjpz8utVzSN74sjUZw41C8vV25MMpT"
+  public_key = "${var.public_ssh_key}"
 }
 
 resource "aws_subnet" "kirill-kulikov-cp" {
   cidr_block        = "${cidrsubnet(aws_vpc.kirill-kulikov-cp.cidr_block, 3, 1)}"
   vpc_id            = "${aws_vpc.kirill-kulikov-cp.id}"
-  availability_zone = "eu-west-2c"
+  availability_zone = "${var.aws_availability_zone}"
 }
 
 // Setting up security groups
@@ -57,15 +84,6 @@ resource "aws_security_group" "kirill-kulikov-cp" {
   }
 }
 
-// Setting up inputs
-variable "ec2_instance_name" {
-  default = "kirill-kulikov-cp-5-3-x"
-}
-
-variable "ec2_instance_count" {
-  default = "4"
-}
-
 // Launching EC2 instance
 resource "aws_instance" "test-ec2-instance" {
   count                       = "${var.ec2_instance_count}"
@@ -74,8 +92,8 @@ resource "aws_instance" "test-ec2-instance" {
   key_name                    = "${aws_key_pair.deployer.key_name}"
   security_groups             = ["${aws_security_group.kirill-kulikov-cp.id}"]
   tags = {
-    Name  = "${var.ec2_instance_name}"
-    Owner = "Kirill Kulikov"
+    Name  = "${var.resource_name}"
+    Owner = "${var.resource_owner}"
   }
   subnet_id = "${aws_subnet.kirill-kulikov-cp.id}"
 }
@@ -91,8 +109,8 @@ resource "aws_eip" "kirill-kulikov-cp" {
 resource "aws_internet_gateway" "internet-gateway" {
   vpc_id = "${aws_vpc.kirill-kulikov-cp.id}"
   tags = {
-    Name  = "kirill-kulikov-cp"
-    Owner = "Kirill Kulikov"
+    Name  = "${var.resource_name}"
+    Owner = "${var.resource_owner}"
   }
 }
 
@@ -104,8 +122,8 @@ resource "aws_route_table" "route-table" {
     gateway_id = "${aws_internet_gateway.internet-gateway.id}"
   }
   tags = {
-    Name  = "kirill-kulikov-cp"
-    Owner = "Kirill Kulikov"
+    Name  = "${var.resource_name}"
+    Owner = "${var.resource_owner}"
   }
 }
 resource "aws_route_table_association" "subnet-association" {
