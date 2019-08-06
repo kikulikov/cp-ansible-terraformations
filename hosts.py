@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 
 from jinja2 import Template
-import boto3
+from boto3 import client
 
-ec2client = boto3.client('ec2')
+ec2client = client('ec2')
+ec2_instance_name = "confluent-platform-53"
 
-# TODO proper filtering
 filters = [
     {
         'Name': 'instance-state-name',
         'Values': [
             'running',
+        ]
+    },
+    {
+        'Name': 'tag:Name',
+        'Values': [
+            'confluent-platform-53',
         ]
     },
 ]
@@ -20,7 +26,7 @@ servers = []
 
 for reservation in response["Reservations"]:
     for instance in reservation["Instances"]:
-        servers.append(instance["PublicDnsName"])
+        servers.append(instance["PrivateDnsName"])
 
 servers = sorted(servers)
 
