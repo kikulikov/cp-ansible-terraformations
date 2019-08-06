@@ -64,9 +64,9 @@ resource "aws_vpc" "platform" {
   enable_dns_hostnames = true
   enable_dns_support   = true
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
@@ -76,9 +76,9 @@ resource "aws_subnet" "platform" {
   vpc_id            = "${aws_vpc.platform.id}"
   availability_zone = "${var.aws_availability_zone}"
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
@@ -106,9 +106,9 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
@@ -132,9 +132,9 @@ resource "aws_security_group" "allow_tcp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
@@ -143,16 +143,20 @@ resource "aws_instance" "jumpbox" {
   ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "t3.micro"
   key_name      = "${aws_key_pair.platform.key_name}"
-  security_groups = [
+  vpc_security_group_ids = [
     "${aws_security_group.allow_ssh.id}",
     "${aws_security_group.allow_tcp.id}"
   ]
   tags = {
-    Name  = "${var.resource_name}-jumpbox"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}-jumpbox"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
+  root_block_device {
+    volume_size = 8
+  }
+  # associate_public_ip_address = true
   subnet_id = "${aws_subnet.platform.id}"
 }
 
@@ -161,38 +165,48 @@ resource "aws_instance" "component" {
   ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "m5.large"
   key_name      = "${aws_key_pair.platform.key_name}"
-  security_groups = [
+  vpc_security_group_ids = [
     "${aws_security_group.allow_ssh.id}",
     "${aws_security_group.allow_tcp.id}"
   ]
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
-  subnet_id = "${aws_subnet.platform.id}"
+  root_block_device {
+    volume_size = 16
+  }
+  # associate_public_ip_address = true
+  subnet_id                   = "${aws_subnet.platform.id}"
 }
 
 # Attaching an elastic IP
 resource "aws_eip" "platform_jumpbox" {
   instance = "${aws_instance.jumpbox.id}"
   vpc      = true
+  tags = {
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
+    Purpose = "${var.resource_purpose}"
+  }
 }
 
-resource "aws_eip" "platform" {
-  instance = "${element(aws_instance.component.*.id, count.index)}"
-  count    = "${var.ec2_instance_count}"
-  vpc      = true
-}
+# resource "aws_eip" "platform" {
+#   instance = "${element(aws_instance.component.*.id, count.index)}"
+#   count    = "${var.ec2_instance_count}"
+#   vpc      = true
+# }
 
 # Setting up an internet gateway
 resource "aws_internet_gateway" "platform" {
   vpc_id = "${aws_vpc.platform.id}"
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
@@ -205,9 +219,9 @@ resource "aws_route_table" "platform" {
     gateway_id = "${aws_internet_gateway.platform.id}"
   }
   tags = {
-    Name  = "${var.resource_name}"
-    Owner = "${var.resource_owner}"
-    Email = "${var.resource_email}"
+    Name    = "${var.resource_name}"
+    Owner   = "${var.resource_owner}"
+    Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
 }
