@@ -67,7 +67,7 @@ resource "aws_vpc" "platform" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
@@ -79,7 +79,7 @@ resource "aws_subnet" "platform" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
@@ -109,7 +109,7 @@ resource "aws_security_group" "allow_ssh" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
@@ -135,11 +135,11 @@ resource "aws_security_group" "allow_tcp" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
-resource "aws_instance" "jump_host" {
+resource "aws_instance" "jumpbox" {
   ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "t3.micro"
   key_name      = "${aws_key_pair.platform.key_name}"
@@ -148,10 +148,10 @@ resource "aws_instance" "jump_host" {
     "${aws_security_group.allow_tcp.id}"
   ]
   tags = {
-    Name  = "${var.resource_name}-jump-host"
+    Name  = "${var.resource_name}-jumpbox"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
   subnet_id = "${aws_subnet.platform.id}"
 }
@@ -169,14 +169,14 @@ resource "aws_instance" "component" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
   subnet_id = "${aws_subnet.platform.id}"
 }
 
 # Attaching an elastic IP
-resource "aws_eip" "platform_jump_host" {
-  instance = "${aws_instance.jump_host.id}"
+resource "aws_eip" "platform_jumpbox" {
+  instance = "${aws_instance.jumpbox.id}"
   vpc      = true
 }
 
@@ -193,7 +193,7 @@ resource "aws_internet_gateway" "platform" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
@@ -208,7 +208,7 @@ resource "aws_route_table" "platform" {
     Name  = "${var.resource_name}"
     Owner = "${var.resource_owner}"
     Email = "${var.resource_email}"
-    Email = "${var.resource_purpose}"
+    Purpose = "${var.resource_purpose}"
   }
 }
 
