@@ -4,6 +4,7 @@
 # 2. Namings
 # 3. Documentation
 # 4. No EIP for brokers
+# 5. Review vpc_security_group_ids
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Variables
@@ -75,6 +76,7 @@ resource "aws_subnet" "platform" {
   cidr_block        = "${cidrsubnet(aws_vpc.platform.cidr_block, 3, 1)}"
   vpc_id            = "${aws_vpc.platform.id}"
   availability_zone = "${var.aws_availability_zone}"
+  # map_public_ip_on_launch = true
   tags = {
     Name    = "${var.resource_name}"
     Owner   = "${var.resource_owner}"
@@ -87,17 +89,15 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
-resource "aws_security_group" "allow_ssh" {
-  name        = "confluent-platform-allow-ssh"
-  description = "Allow SSH inbound traffic"
+resource "aws_security_group" "allow_private" {
+  name        = "confluent-platform-allow-private"
+  description = "Allow private inbound traffic"
   vpc_id      = "${aws_vpc.platform.id}"
   ingress {
-    cidr_blocks = [
-      "${chomp(data.http.myip.body)}/32"
-    ]
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
   }
   egress {
     from_port   = 0
@@ -113,17 +113,15 @@ resource "aws_security_group" "allow_ssh" {
   }
 }
 
-resource "aws_security_group" "allow_tcp" {
-  name        = "confluent-platform-allow-tcp"
-  description = "Allow TCP inbound traffic"
+resource "aws_security_group" "allow_public" {
+  name        = "confluent-platform-allow-public"
+  description = "Allow public inbound traffic"
   vpc_id      = "${aws_vpc.platform.id}"
   ingress {
-    cidr_blocks = [
-      "${chomp(data.http.myip.body)}/32"
-    ]
-    from_port = 9021
-    to_port   = 9021
-    protocol  = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
   }
   egress {
     from_port   = 0
@@ -144,8 +142,7 @@ resource "aws_instance" "jumpbox" {
   instance_type = "t3.micro"
   key_name      = "${aws_key_pair.platform.key_name}"
   vpc_security_group_ids = [
-    "${aws_security_group.allow_ssh.id}",
-    "${aws_security_group.allow_tcp.id}"
+    "${aws_security_group.allow_public.id}"
   ]
   tags = {
     Name    = "${var.resource_name}-jumpbox"
@@ -155,6 +152,7 @@ resource "aws_instance" "jumpbox" {
   }
   root_block_device {
     volume_size = 8
+    volume_type = "gp2"
   }
   # associate_public_ip_address = true
   subnet_id = "${aws_subnet.platform.id}"
@@ -166,8 +164,7 @@ resource "aws_instance" "component" {
   instance_type = "m5.large"
   key_name      = "${aws_key_pair.platform.key_name}"
   vpc_security_group_ids = [
-    "${aws_security_group.allow_ssh.id}",
-    "${aws_security_group.allow_tcp.id}"
+    "${aws_security_group.allow_private.id}"
   ]
   tags = {
     Name    = "${var.resource_name}"
@@ -177,9 +174,10 @@ resource "aws_instance" "component" {
   }
   root_block_device {
     volume_size = 16
+    volume_type = "gp2"
   }
   # associate_public_ip_address = true
-  subnet_id                   = "${aws_subnet.platform.id}"
+  subnet_id = "${aws_subnet.platform.id}"
 }
 
 # Attaching an elastic IP

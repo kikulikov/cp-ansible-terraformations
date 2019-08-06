@@ -22,6 +22,10 @@ https://docs.ansible.com/ansible/latest/reference_appendices/faq.html
 
 https://spin.atomicobject.com/2016/05/16/ansible-aws-ec2-vpc/
 
+ssh-add -k ~/.ssh/private_ssh_key.pem
+ssh-add -L
+ssh -A ubuntu@ec2-3-9-60-128.eu-west-2.compute.amazonaws.com -t 'ssh ubuntu@ip-10-0-39-206.eu-west-2.compute.internal'
+
 ## Examples
 
 ```terraform
