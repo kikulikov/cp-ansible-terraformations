@@ -137,26 +137,26 @@ resource "aws_security_group" "allow_public" {
   }
 }
 
-resource "aws_instance" "jumpbox" {
-  ami           = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t3.micro"
-  key_name      = "${aws_key_pair.platform.key_name}"
-  vpc_security_group_ids = [
-    "${aws_security_group.allow_public.id}"
-  ]
-  tags = {
-    Name    = "${var.resource_name}-jumpbox"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
-  }
-  root_block_device {
-    volume_size = 8
-    volume_type = "gp2"
-  }
-  # associate_public_ip_address = true
-  subnet_id = "${aws_subnet.platform.id}"
-}
+# resource "aws_instance" "jumpbox" {
+#   ami           = "${data.aws_ami.ubuntu.id}"
+#   instance_type = "t3.micro"
+#   key_name      = "${aws_key_pair.platform.key_name}"
+#   vpc_security_group_ids = [
+#     "${aws_security_group.allow_public.id}"
+#   ]
+#   tags = {
+#     Name    = "${var.resource_name}-jumpbox"
+#     Owner   = "${var.resource_owner}"
+#     Email   = "${var.resource_email}"
+#     Purpose = "${var.resource_purpose}"
+#   }
+#   root_block_device {
+#     volume_size = 8
+#     volume_type = "gp2"
+#   }
+#   # associate_public_ip_address = true
+#   subnet_id = "${aws_subnet.platform.id}"
+# }
 
 resource "aws_instance" "component" {
   count         = "${var.ec2_instance_count}"
@@ -164,6 +164,7 @@ resource "aws_instance" "component" {
   instance_type = "m5.large"
   key_name      = "${aws_key_pair.platform.key_name}"
   vpc_security_group_ids = [
+    "${aws_security_group.allow_public.id}",
     "${aws_security_group.allow_private.id}"
   ]
   tags = {
@@ -176,21 +177,21 @@ resource "aws_instance" "component" {
     volume_size = 16
     volume_type = "gp2"
   }
-  # associate_public_ip_address = true
+  associate_public_ip_address = true
   subnet_id = "${aws_subnet.platform.id}"
 }
 
 # Attaching an elastic IP
-resource "aws_eip" "platform_jumpbox" {
-  instance = "${aws_instance.jumpbox.id}"
-  vpc      = true
-  tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
-  }
-}
+# resource "aws_eip" "platform_jumpbox" {
+#   instance = "${aws_instance.jumpbox.id}"
+#   vpc      = true
+#   tags = {
+#     Name    = "${var.resource_name}"
+#     Owner   = "${var.resource_owner}"
+#     Email   = "${var.resource_email}"
+#     Purpose = "${var.resource_purpose}"
+#   }
+# }
 
 # resource "aws_eip" "platform" {
 #   instance = "${element(aws_instance.component.*.id, count.index)}"
