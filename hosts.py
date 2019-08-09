@@ -26,7 +26,7 @@ servers = []
 
 for reservation in response["Reservations"]:
     for instance in reservation["Instances"]:
-        servers.append(instance["PrivateDnsName"])
+        servers.append(instance["PublicDnsName"])
 
 servers = sorted(servers)
 
