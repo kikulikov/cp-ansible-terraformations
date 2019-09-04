@@ -3,7 +3,7 @@ all:
     ansible_connection: ssh
     ansible_ssh_user: ubuntu
     ansible_become: true
-    security_mode: plaintext
+    security_mode: ssl
 preflight:
   hosts:
     {{servers.0}}:
@@ -15,7 +15,7 @@ zookeeper:
     {{servers.0}}:
     {{servers.1}}:
     {{servers.2}}:
-broker:
+kafka_broker:
   hosts:
     {{servers.0}}:
       kafka:
@@ -29,21 +29,19 @@ broker:
       kafka:
         broker:
           id: 3
-schema-registry:
+schema_registry:
   hosts:
     {{servers.3}}:
-control-center:
+control_center:
   hosts:
     {{servers.3}}:
-      confluent:
-        control:
-          center:
-            config:
-              confluent.controlcenter.connect.cluster: {{servers.3}}:8083
-connect-distributed:
-  hosts:
-    {{servers.3}}:
-kafka-rest:
+      control_center:
+        properties:
+          confluent.controlcenter.connect.cluster: {{servers.3}}:8083
+# kafka_connect:
+#   hosts:
+#     {{servers.3}}:
+kafka_rest:
   hosts:
     {{servers.3}}:
 ksql:
