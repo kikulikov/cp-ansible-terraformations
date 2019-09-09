@@ -18,29 +18,26 @@ zookeeper:
 kafka_broker:
   hosts:
     {{servers.0}}:
-      kafka:
-        broker:
-          id: 1
+      kafka_broker:
+        properties:
+          advertised.listeners: SSL://{{servers.0}}:9092
     {{servers.1}}:
-      kafka:
-        broker:
-          id: 2
+      kafka_broker:
+        properties:
+          advertised.listeners: SSL://{{servers.1}}:9092
     {{servers.2}}:
-      kafka:
-        broker:
-          id: 3
+      kafka_broker:
+        properties:
+          advertised.listeners: SSL://{{servers.2}}:9092
 schema_registry:
   hosts:
     {{servers.3}}:
 control_center:
   hosts:
     {{servers.3}}:
-      control_center:
-        properties:
-          confluent.controlcenter.connect.cluster: {{servers.3}}:8083
-# kafka_connect:
-#   hosts:
-#     {{servers.3}}:
+kafka_connect:
+  hosts:
+    {{servers.3}}:
 kafka_rest:
   hosts:
     {{servers.3}}:

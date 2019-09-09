@@ -122,6 +122,35 @@ resource "aws_security_group" "allow_public" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "SSH"
+  }
+  ingress {
+    from_port   = 9021
+    to_port     = 9021
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "C3"
+  }
+  ingress {
+    from_port   = 9092
+    to_port     = 9092
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "Kafka"
+  }
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "Kafka"
+  }
+  ingress {
+    from_port   = 8083
+    to_port     = 8083
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "Kafka"
   }
   egress {
     from_port   = 0

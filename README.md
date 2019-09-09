@@ -5,11 +5,25 @@ Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 ## Kafka
 
 ```bash
+security.protocol=SSL
+ssl.key.password=confluent
+ssl.keystore.location=generated_ssl_files/client.keystore.jks
+ssl.keystore.password=confluent
+ssl.keystore.type=JKS
+ssl.truststore.location=generated_ssl_files/client.truststore.jks
+ssl.truststore.password=confluent
+ssl.truststore.type=JKS
+ssl.endpoint.identification.algorithm=
+ssl.protocol=TLS
+```
+
+```bash
 kafkacat -b ec2-18-130-205-109.eu-west-2.compute.amazonaws.com:9092 \
 -X security.protocol=SSL \
 -X ssl.key.location=generated_ssl_files/client.key \
 -X ssl.key.password=confluent \
--X ssl.certificate.location=generated_ssl_files/client.certificate.pem -X ssl.ca.location=generated_ssl_files/snakeoil-ca-1.crt -L
+-X ssl.certificate.location=generated_ssl_files/client.certificate.pem \
+-X ssl.ca.location=generated_ssl_files/snakeoil-ca-1.crt -L
 
 echo "cnwejkfbhwekjnfjwerk" | kafkacat -b ec2-18-130-205-109.eu-west-2.compute.amazonaws.com:9092 \
 -X security.protocol=SSL \
