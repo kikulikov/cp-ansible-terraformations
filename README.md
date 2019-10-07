@@ -2,6 +2,24 @@
 
 Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
+## Usage
+
+```bash
+terraform init aws-public
+```
+
+```bash
+terraform plan -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
+```
+
+```bash
+terraform apply -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
+```
+
+```bash
+ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ~/confluent/cp-ansible-terraformations/hosts.yml all.yml
+```
+
 ## Kafka
 
 ```bash

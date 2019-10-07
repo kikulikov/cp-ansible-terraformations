@@ -10,39 +10,51 @@
 # Variables
 
 variable "resource_name" {
-  default = "confluent-platform-53"
+  description = "The `Name` tag to use for provisioned services (e.g. confluent-platform-531)"
+  type = string
 }
 
 variable "resource_owner" {
-  default = "Kirill Kulikov"
+  description = "The `Owner` tag to use for provisioned services (e.g. Kirill Kulikov)"
+  type = string
 }
 
 variable "resource_email" {
-  default = "kirill.kulikov@confluent.io"
+  description = "The `Email` tag to use for provisioned services (e.g. kirill.kulikov@confluent.io)"
+  type = string
 }
 
 variable "resource_purpose" {
-  default = "Testing CP 5.3.0 ansible deployment"
-}
-
-variable "ssh_key_name" {
-  default = "kirill-kulikov-ssh"
-}
-
-variable "public_ssh_key" {
-  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCgabMpBLAUm8mqkRyysIp6xllh9rQDQ0JqGGK2UOPMUeq7j8EQpOq8yGahBOCjnA0KbP6pXcWqZO7H2FOyNYom+RcsKDdorOF8zmn7L8iKKFFtQjmEaiRi+O9ndYVm6gxBIZX4S0eQRPiwVjNE2ARt4AWfXPMTiQZmXf7vPxeRWsRwIDhLxEjM6Esw/Sytd3rMiZF5fkybHhqKDKZ7GlbUGngZdlK9w8AItZEYThknKvCkdt50ntZFjL3+b7ROW2RGm89kbA+j4w0gaDzCFgN/BRiKeoGblRXfHBSu7qOMARhcdO34DohGHRyjpz8utVzSN74sjUZw41C8vV25MMpT"
+  description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 5.3.1 ansible deployment)"
+  type = string
 }
 
 variable "aws_region" {
+  description = "The region to use (e.g. eu-west-2)"
+  type = string
   default = "eu-west-2"
 }
 
 variable "aws_availability_zone" {
+  description = "The availbility zone to use (e.g. eu-west-2c)"
+  type = string
   default = "eu-west-2c"
 }
 
 variable "ec2_instance_count" {
+  description = "The number of EC2 Instances to run (e.g. 4)"
+  type = string
   default = "4"
+}
+
+variable "ssh_key_name" {
+  description = "The key pair name (e.g. kirill-kulikov-ssh)"
+  type = string
+}
+
+variable "ssh_public_key_path" {
+  description = "The path to the SSH public key (e.g. ~/.ssh/Kirill-Kulikov-Confluent.pub)"
+  type = string
 }
 
 # Terraform Code
@@ -51,13 +63,9 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
-# variable "key_pair_name" {
-#   description = "The EC2 Key Pair to associate with the EC2 Instance for SSH access."
-# }
-
 resource "aws_key_pair" "platform" {
   key_name   = "${var.ssh_key_name}"
-  public_key = "${var.public_ssh_key}"
+  public_key = file(var.ssh_public_key_path)
 }
 
 resource "aws_vpc" "platform" {
@@ -76,7 +84,6 @@ resource "aws_subnet" "platform" {
   cidr_block        = "${cidrsubnet(aws_vpc.platform.cidr_block, 3, 1)}"
   vpc_id            = "${aws_vpc.platform.id}"
   availability_zone = "${var.aws_availability_zone}"
-  # map_public_ip_on_launch = true
   tags = {
     Name    = "${var.resource_name}"
     Owner   = "${var.resource_owner}"
@@ -207,7 +214,7 @@ resource "aws_instance" "component" {
     volume_type = "gp2"
   }
   associate_public_ip_address = true
-  subnet_id = "${aws_subnet.platform.id}"
+  subnet_id                   = "${aws_subnet.platform.id}"
 }
 
 # Attaching an elastic IP

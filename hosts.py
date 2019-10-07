@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 
-from jinja2 import Template
+import argparse
+
 from boto3 import client
+from jinja2 import Template
+
+parser = argparse.ArgumentParser(description='Hosts file generator')
+parser.add_argument('ec2_instance_name', metavar='N', type=str,
+                    help='EC2 instance name for filtering')
+args = parser.parse_args()
 
 ec2client = client('ec2')
-ec2_instance_name = "confluent-platform-53"
+ec2_instance_name = args.ec2_instance_name
 
 filters = [
     {
@@ -16,7 +23,7 @@ filters = [
     {
         'Name': 'tag:Name',
         'Values': [
-            'confluent-platform-53',
+            ec2_instance_name,
         ]
     },
 ]
