@@ -174,7 +174,7 @@ resource "aws_instance" "component" {
     Purpose = "${var.resource_purpose}"
   }
   root_block_device {
-    volume_size = 16
+    volume_size = 32
     volume_type = "gp2"
   }
   associate_public_ip_address = true
