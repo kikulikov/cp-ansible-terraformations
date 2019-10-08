@@ -4,20 +4,34 @@ Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
 ## Usage
 
+### Initialize a Terraform working directory
+
 ```bash
 terraform init aws-public
 ```
+
+### Generate and show an execution plan
 
 ```bash
 terraform plan -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
+### Build Terraform-managed infrastructure
+
 ```bash
 terraform apply -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
+### Generate hosts.yml `cp-ansible` configuration
+
 ```bash
 ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ~/confluent/cp-ansible-terraformations/hosts.yml all.yml
+```
+
+### Destroy Terraform-managed infrastructure
+
+```bash
+terraform destroy -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
 ## Kafka
