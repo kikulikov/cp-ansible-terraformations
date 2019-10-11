@@ -136,7 +136,7 @@ resource "aws_security_group" "allow_public" {
     to_port     = 9021
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
-    description = "C3"
+    description = "Control Center"
   }
   ingress {
     from_port   = 9092
@@ -150,7 +150,7 @@ resource "aws_security_group" "allow_public" {
     to_port     = 8081
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
-    description = "Kafka"
+    description = "Schema Registry"
   }
   ingress {
     from_port   = 8083
