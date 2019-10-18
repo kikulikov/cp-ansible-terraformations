@@ -2,6 +2,10 @@
 
 Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
+## TODO
+
+Check https://github.com/adammck/terraform-inventory for inventory generation.
+
 ## Usage
 
 ### Initialize a Terraform working directory
