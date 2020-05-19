@@ -47,6 +47,12 @@ variable "ec2_instance_count" {
   default = "4"
 }
 
+variable "ec2_instance_type" {
+  description = "The type of EC2 Instances to run (e.g. m5.large)"
+  type = string
+  default = "m5.large"
+}
+
 variable "ssh_key_name" {
   description = "The key pair name (e.g. kirill-kulikov-ssh)"
   type = string
@@ -197,7 +203,7 @@ resource "aws_security_group" "allow_public" {
 resource "aws_instance" "component" {
   count         = "${var.ec2_instance_count}"
   ami           = "${data.aws_ami.ubuntu.id}"
-  instance_type = "m5.large"
+  instance_type = "${var.ec2_instance_type}"
   key_name      = "${aws_key_pair.platform.key_name}"
   vpc_security_group_ids = [
     "${aws_security_group.allow_public.id}",
