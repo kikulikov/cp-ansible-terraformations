@@ -1,6 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # TODO
-# 1. aws_key_pair from file
 # 2. Namings
 # 3. Documentation
 # 4. No EIP for brokers
@@ -10,7 +9,7 @@
 # Variables
 
 variable "resource_name" {
-  description = "The `Name` tag to use for provisioned services (e.g. confluent-platform-531)"
+  description = "The `Name` tag to use for provisioned services (e.g. confluent-platform-551)"
   type = string
 }
 
@@ -25,7 +24,7 @@ variable "resource_email" {
 }
 
 variable "resource_purpose" {
-  description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 5.3.1 ansible deployment)"
+  description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 551)"
   type = string
 }
 
@@ -66,11 +65,11 @@ variable "ssh_public_key_path" {
 # Terraform Code
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 resource "aws_key_pair" "platform" {
-  key_name   = "${var.ssh_key_name}"
+  key_name   = var.ssh_key_name
   public_key = file(var.ssh_public_key_path)
 }
 
@@ -79,22 +78,22 @@ resource "aws_vpc" "platform" {
   enable_dns_hostnames = true
   enable_dns_support   = true
   tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
+    Name    = var.resource_name
+    Owner   = var.resource_owner
+    Email   = var.resource_email
+    Purpose = var.resource_purpose
   }
 }
 
 resource "aws_subnet" "platform" {
-  cidr_block        = "${cidrsubnet(aws_vpc.platform.cidr_block, 3, 1)}"
-  vpc_id            = "${aws_vpc.platform.id}"
-  availability_zone = "${var.aws_availability_zone}"
+  cidr_block        = cidrsubnet(aws_vpc.platform.cidr_block, 3, 1)
+  vpc_id            = aws_vpc.platform.id
+  availability_zone = var.aws_availability_zone
   tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
+    Name    = var.resource_name
+    Owner   = var.resource_owner
+    Email   = var.resource_email
+    Purpose = var.resource_purpose
   }
 }
 
@@ -119,17 +118,17 @@ resource "aws_security_group" "allow_private" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
+    Name    = var.resource_name
+    Owner   = var.resource_owner
+    Email   = var.resource_email
+    Purpose = var.resource_purpose
   }
 }
 
 resource "aws_security_group" "allow_public" {
   name        = "confluent-platform-allow-public"
   description = "Allow public inbound traffic"
-  vpc_id      = "${aws_vpc.platform.id}"
+  vpc_id      = aws_vpc.platform.id
   ingress {
     from_port   = 22
     to_port     = 22

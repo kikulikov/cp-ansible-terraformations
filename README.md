@@ -17,13 +17,13 @@ terraform init aws-public
 ### Generate and show an execution plan
 
 ```bash
-terraform plan -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-550" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 550" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
+terraform plan -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-551" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 551" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
 ### Build Terraform-managed infrastructure
 
 ```bash
-terraform apply -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
+terraform apply -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-551" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 551" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
 ### Generate hosts.yml `cp-ansible` configuration
@@ -41,7 +41,7 @@ ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ~/confluent/cp-ansible-terra
 ### Destroy Terraform-managed infrastructure
 
 ```bash
-terraform destroy -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-531" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 5.3.1" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
+terraform destroy -var="resource_email=kirill.kulikov@confluent.io" -var="resource_name=confluent-platform-551" -var="resource_owner=Kirill Kulikov" -var="resource_purpose=Testing CP 551" -var="ssh_key_name=kirill-kulikov-ssh" -var="ssh_public_key_path=~/.ssh/Kirill-Kulikov-Confluent.pub" -state=aws-public/terraform.tfstate aws-public
 ```
 
 ## Ansible
