@@ -1,65 +1,57 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# TODO
-# 2. Namings
-# 3. Documentation
-# 4. No EIP for brokers
-# 5. Review vpc_security_group_ids
-# ---------------------------------------------------------------------------------------------------------------------
-
 # Variables
 
 variable "resource_name" {
   description = "The `Name` tag to use for provisioned services (e.g. confluent-platform-551)"
-  type = string
+  type        = string
 }
 
 variable "resource_owner" {
   description = "The `Owner` tag to use for provisioned services (e.g. Kirill Kulikov)"
-  type = string
+  type        = string
 }
 
 variable "resource_email" {
   description = "The `Email` tag to use for provisioned services (e.g. kirill.kulikov@confluent.io)"
-  type = string
+  type        = string
 }
 
 variable "resource_purpose" {
   description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 551)"
-  type = string
+  type        = string
 }
 
 variable "aws_region" {
   description = "The region to use (e.g. eu-west-2)"
-  type = string
-  default = "eu-west-2"
+  type        = string
+  default     = "eu-west-2"
 }
 
 variable "aws_availability_zone" {
   description = "The availbility zone to use (e.g. eu-west-2c)"
-  type = string
-  default = "eu-west-2c"
+  type        = string
+  default     = "eu-west-2c"
 }
 
 variable "ec2_instance_count" {
   description = "The number of EC2 Instances to run (e.g. 4)"
-  type = string
-  default = "4"
+  type        = string
+  default     = "4"
 }
 
 variable "ec2_instance_type" {
   description = "The type of EC2 Instances to run (e.g. m5.large)"
-  type = string
-  default = "m5.large"
+  type        = string
+  default     = "m5.large"
 }
 
 variable "ssh_key_name" {
   description = "The key pair name (e.g. kirill-kulikov-ssh)"
-  type = string
+  type        = string
 }
 
 variable "ssh_public_key_path" {
   description = "The path to the SSH public key (e.g. ~/.ssh/Kirill-Kulikov-Confluent.pub)"
-  type = string
+  type        = string
 }
 
 # Terraform Code
@@ -201,7 +193,8 @@ resource "aws_security_group" "allow_public" {
 
 resource "aws_instance" "component" {
   count         = "${var.ec2_instance_count}"
-  ami           = "${data.aws_ami.ubuntu.id}"
+  ami           = "${data.aws_ami.rhel.id}"
+
   instance_type = "${var.ec2_instance_type}"
   key_name      = "${aws_key_pair.platform.key_name}"
   vpc_security_group_ids = [
@@ -251,7 +244,7 @@ resource "aws_internet_gateway" "platform" {
   }
 }
 
-# Setting up route tables
+# Setting up the route table
 resource "aws_route_table" "platform" {
   vpc_id = "${aws_vpc.platform.id}"
   route {
@@ -266,6 +259,7 @@ resource "aws_route_table" "platform" {
   }
 }
 
+# Associating the route tables
 resource "aws_route_table_association" "platform" {
   subnet_id      = "${aws_subnet.platform.id}"
   route_table_id = "${aws_route_table.platform.id}"
@@ -273,14 +267,24 @@ resource "aws_route_table_association" "platform" {
 
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["${var.ubuntu_account_number}"]
+  owners      = ["099720109477"]
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+ filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
+
+  name_regex = "^ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-.*"
 }
 
-variable "ubuntu_account_number" {
-  default = "099720109477"
+data "aws_ami" "rhel" {
+  most_recent = true
+  owners      = ["309956199498"]
+
+ filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  name_regex = "^RHEL-7.*x86_64.*"
 }
