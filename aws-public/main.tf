@@ -44,6 +44,12 @@ variable "ec2_instance_type" {
   default     = "m5.large"
 }
 
+variable "ec2_ami_type" {
+  description = "The type of AMI to run on EC2 Instances (ubuntu, rhel)"
+  type        = string
+  default     = "ubuntu"
+}
+
 variable "ssh_key_name" {
   description = "The key pair name (e.g. kirill-kulikov-ssh)"
   type        = string
@@ -191,9 +197,13 @@ resource "aws_security_group" "allow_public" {
 #   subnet_id = "${aws_subnet.platform.id}"
 # }
 
+locals {
+  ec2_ami_id = var.ec2_ami_type == "rhel" ? data.aws_ami.rhel.id : data.aws_ami.ubuntu.id
+}
+
 resource "aws_instance" "component" {
   count         = "${var.ec2_instance_count}"
-  ami           = "${data.aws_ami.rhel.id}"
+  ami           = "${local.ec2_ami_id}"
 
   instance_type = "${var.ec2_instance_type}"
   key_name      = "${aws_key_pair.platform.key_name}"
