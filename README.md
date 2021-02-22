@@ -2,6 +2,54 @@
 
 Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
+## Docker on Ubuntu
+
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04
+
+```bash
+First, update your existing list of packages:
+
+sudo apt update
+Next, install a few prerequisite packages which let apt use packages over HTTPS:
+
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+Then add the GPG key for the official Docker repository to your system:
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+Add the Docker repository to APT sources:
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+Next, update the package database with the Docker packages from the newly added repo:
+
+sudo apt update
+Make sure you are about to install from the Docker repo instead of the default Ubuntu repo:
+
+apt-cache policy docker-ce
+
+Finally, install Docker:
+
+sudo apt install docker-ce
+
+sudo aptitude install -y docker-compose
+sudo aptitude install -y git jq vim
+```
+
+## Docker on Amazon Linux 2
+
+https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
+
+```bash
+sudo yum update -y
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+sudo chkconfig docker on
+sudo yum install -y git
+sudo reboot
+```
+
+docker-compose >>> https://gist.github.com/npearce/6f3c7826c7499587f00957fee62f8ee9
+
 ## TODO
 
 Check https://github.com/adammck/terraform-inventory for inventory generation.
@@ -146,3 +194,4 @@ https://spin.atomicobject.com/2016/05/16/ansible-aws-ec2-vpc/
 ssh-add -k ~/.ssh/private_ssh_key.pem
 ssh-add -L
 ssh -A ubuntu@ec2-3-9-60-128.eu-west-2.compute.amazonaws.com -t 'ssh ubuntu@ip-10-0-39-206.eu-west-2.compute.internal'
+

@@ -198,7 +198,8 @@ resource "aws_security_group" "allow_public" {
 # }
 
 locals {
-  ec2_ami_id = var.ec2_ami_type == "rhel" ? data.aws_ami.rhel.id : data.aws_ami.ubuntu.id
+  ec2_ami_id = var.ec2_ami_type == "rhel" ? data.aws_ami.rhel_7.id : data.aws_ami.ubuntu_18.id
+  # TODO ec2_ami_id = data.aws_ami.amazon_linux_2.id
 }
 
 resource "aws_instance" "component" {
@@ -218,7 +219,7 @@ resource "aws_instance" "component" {
     Purpose = "${var.resource_purpose}"
   }
   root_block_device {
-    volume_size = 16
+    volume_size = 32
     volume_type = "gp2"
   }
   associate_public_ip_address = true
@@ -275,7 +276,7 @@ resource "aws_route_table_association" "platform" {
   route_table_id = "${aws_route_table.platform.id}"
 }
 
-data "aws_ami" "ubuntu" {
+data "aws_ami" "ubuntu_18" {
   most_recent = true
   owners      = ["099720109477"]
 
@@ -287,7 +288,7 @@ data "aws_ami" "ubuntu" {
   name_regex = "^ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-.*"
 }
 
-data "aws_ami" "rhel" {
+data "aws_ami" "rhel_7" {
   most_recent = true
   owners      = ["309956199498"]
 
@@ -298,3 +299,18 @@ data "aws_ami" "rhel" {
 
   name_regex = "^RHEL-7.*x86_64.*"
 }
+
+# data "aws_ami" "amazon_linux_2" {
+#   most_recent = true
+#   owners = ["amazon"]
+
+#   filter {
+#     name   = "owner-alias"
+#     values = ["amazon"]
+#   }
+
+#   filter {
+#     name   = "name"
+#     values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+#   }
+# }
