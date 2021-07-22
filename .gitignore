@@ -9,7 +9,7 @@
 *.tfstate.*
 
 # .tfvars files
-*.tfvars
+# *.tfvars
 
 # hosts.yml generated file
 hosts.yml
