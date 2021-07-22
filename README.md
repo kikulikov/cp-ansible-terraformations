@@ -2,6 +2,10 @@
 
 Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
+## Finding AWS AMI
+
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html
+
 ## Docker on Ubuntu
 
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04

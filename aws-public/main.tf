@@ -1,65 +1,3 @@
-# Variables
-
-variable "resource_name" {
-  description = "The `Name` tag to use for provisioned services (e.g. confluent-platform-551)"
-  type        = string
-}
-
-variable "resource_owner" {
-  description = "The `Owner` tag to use for provisioned services (e.g. Kirill Kulikov)"
-  type        = string
-}
-
-variable "resource_email" {
-  description = "The `Email` tag to use for provisioned services (e.g. kirill.kulikov@confluent.io)"
-  type        = string
-}
-
-variable "resource_purpose" {
-  description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 551)"
-  type        = string
-}
-
-variable "aws_region" {
-  description = "The region to use (e.g. eu-west-2)"
-  type        = string
-  default     = "eu-west-2"
-}
-
-variable "aws_availability_zone" {
-  description = "The availbility zone to use (e.g. eu-west-2c)"
-  type        = string
-  default     = "eu-west-2c"
-}
-
-variable "ec2_instance_count" {
-  description = "The number of EC2 Instances to run (e.g. 4)"
-  type        = string
-  default     = "4"
-}
-
-variable "ec2_instance_type" {
-  description = "The type of EC2 Instances to run (e.g. m5.large)"
-  type        = string
-  default     = "m5.large"
-}
-
-variable "ec2_ami_type" {
-  description = "The type of AMI to run on EC2 Instances (ubuntu, rhel)"
-  type        = string
-  default     = "ubuntu"
-}
-
-variable "ssh_key_name" {
-  description = "The key pair name (e.g. kirill-kulikov-ssh)"
-  type        = string
-}
-
-variable "ssh_public_key_path" {
-  description = "The path to the SSH public key (e.g. ~/.ssh/Kirill-Kulikov-Confluent.pub)"
-  type        = string
-}
-
 # Terraform Code
 
 provider "aws" {
@@ -72,7 +10,7 @@ resource "aws_key_pair" "platform" {
 }
 
 resource "aws_vpc" "platform" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.aws_ipv4_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
   tags = {
@@ -81,11 +19,17 @@ resource "aws_vpc" "platform" {
     Email   = var.resource_email
     Purpose = var.resource_purpose
   }
+  count = var.aws_vpc_id != "" ? 0 : 1
+}
+
+locals {
+  aws_vpc_id    = var.aws_vpc_id != "" ? var.aws_vpc_id : aws_vpc.platform[0].id
+  aws_ipv4_cidr = var.aws_ipv4_cidr != "" ? var.aws_ipv4_cidr : aws_vpc.platform[0].cidr_block
 }
 
 resource "aws_subnet" "platform" {
-  cidr_block        = cidrsubnet(aws_vpc.platform.cidr_block, 3, 1)
-  vpc_id            = aws_vpc.platform.id
+  cidr_block        = cidrsubnet(local.aws_ipv4_cidr, 3, 1)
+  vpc_id            = local.aws_vpc_id
   availability_zone = var.aws_availability_zone
   tags = {
     Name    = var.resource_name
@@ -93,6 +37,11 @@ resource "aws_subnet" "platform" {
     Email   = var.resource_email
     Purpose = var.resource_purpose
   }
+  count = var.aws_subnet_id != "" ? 0 : 1
+}
+
+locals {
+  aws_subnet_id = var.aws_subnet_id != "" ? var.aws_subnet_id : aws_subnet.platform[0].id
 }
 
 data "http" "myip" {
@@ -102,12 +51,12 @@ data "http" "myip" {
 resource "aws_security_group" "allow_private" {
   name        = "confluent-platform-allow-private"
   description = "Allow private inbound traffic"
-  vpc_id      = "${aws_vpc.platform.id}"
+  vpc_id      = local.aws_vpc_id
   ingress {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = ["${local.aws_ipv4_cidr}"]
   }
   egress {
     from_port   = 0
@@ -126,7 +75,7 @@ resource "aws_security_group" "allow_private" {
 resource "aws_security_group" "allow_public" {
   name        = "confluent-platform-allow-public"
   description = "Allow public inbound traffic"
-  vpc_id      = aws_vpc.platform.id
+  vpc_id      = local.aws_vpc_id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -176,54 +125,50 @@ resource "aws_security_group" "allow_public" {
   }
 }
 
-# resource "aws_instance" "jumpbox" {
-#   ami           = "${data.aws_ami.ubuntu.id}"
-#   instance_type = "t3.micro"
-#   key_name      = "${aws_key_pair.platform.key_name}"
-#   vpc_security_group_ids = [
-#     "${aws_security_group.allow_public.id}"
-#   ]
-#   tags = {
-#     Name    = "${var.resource_name}-jumpbox"
-#     Owner   = "${var.resource_owner}"
-#     Email   = "${var.resource_email}"
-#     Purpose = "${var.resource_purpose}"
-#   }
-#   root_block_device {
-#     volume_size = 8
-#     volume_type = "gp2"
-#   }
-#   # associate_public_ip_address = true
-#   subnet_id = "${aws_subnet.platform.id}"
-# }
-
 locals {
-  ec2_ami_id = var.ec2_ami_type == "rhel" ? data.aws_ami.rhel_7.id : data.aws_ami.ubuntu_18.id
+  ec2_ami_id = var.ec2_ami_type == "rhel" ? data.aws_ami.rhel_8.id : data.aws_ami.ubuntu_18.id
   # TODO ec2_ami_id = data.aws_ami.amazon_linux_2.id
 }
 
-resource "aws_instance" "component" {
-  count         = "${var.ec2_instance_count}"
-  ami           = "${local.ec2_ami_id}"
+locals {
+  service_instances = flatten([
+    for svc_name, svc in var.component : [
+      for i in range(0, svc.instance_count) : {
+        instance_name = "${svc_name}-${i}"
+        instance_type = svc.instance_type
+        # data_volume   = svc.data_volume
+      }
+    ]
+  ])
+  service_instances_map = {
+    for inst in local.service_instances : inst.instance_name => inst
+  }
+}
 
-  instance_type = "${var.ec2_instance_type}"
-  key_name      = "${aws_key_pair.platform.key_name}"
+resource "aws_instance" "component" {
+  ami = local.ec2_ami_id
+
+  # count = var.ec2_instance_count
+  for_each = local.service_instances_map
+
+  instance_type = each.value.instance_type
+  key_name      = aws_key_pair.platform.key_name
   vpc_security_group_ids = [
     "${aws_security_group.allow_public.id}",
     "${aws_security_group.allow_private.id}"
   ]
   tags = {
-    Name    = "${var.resource_name}"
+    Name    = "${var.resource_name}-${each.value.instance_name}"
     Owner   = "${var.resource_owner}"
     Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
-  root_block_device {
+  root_block_device { # TODO attach volumes
     volume_size = 32
     volume_type = "gp2"
   }
   associate_public_ip_address = true
-  subnet_id                   = "${aws_subnet.platform.id}"
+  subnet_id                   = local.aws_subnet_id
 }
 
 # Attaching an elastic IP
@@ -246,21 +191,24 @@ resource "aws_instance" "component" {
 
 # Setting up an internet gateway
 resource "aws_internet_gateway" "platform" {
-  vpc_id = "${aws_vpc.platform.id}"
+  vpc_id = local.aws_vpc_id
   tags = {
     Name    = "${var.resource_name}"
     Owner   = "${var.resource_owner}"
     Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
+  
+  # Skip for the existing VPC
+  count = var.aws_vpc_id != "" ? 0 : 1
 }
 
 # Setting up the route table
 resource "aws_route_table" "platform" {
-  vpc_id = "${aws_vpc.platform.id}"
+  vpc_id = local.aws_vpc_id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.platform.id}"
+    gateway_id = aws_internet_gateway.platform[0].id
   }
   tags = {
     Name    = "${var.resource_name}"
@@ -268,19 +216,25 @@ resource "aws_route_table" "platform" {
     Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
+  
+  # Skip for the existing VPC
+  count = var.aws_vpc_id != "" ? 0 : 1
 }
 
 # Associating the route tables
 resource "aws_route_table_association" "platform" {
-  subnet_id      = "${aws_subnet.platform.id}"
-  route_table_id = "${aws_route_table.platform.id}"
+  subnet_id      = local.aws_subnet_id
+  route_table_id = aws_route_table.platform[0].id
+  
+  # Skip for the existing VPC
+  count = var.aws_vpc_id != "" ? 0 : 1
 }
 
 data "aws_ami" "ubuntu_18" {
   most_recent = true
   owners      = ["099720109477"]
 
- filter {
+  filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
@@ -288,16 +242,16 @@ data "aws_ami" "ubuntu_18" {
   name_regex = "^ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-.*"
 }
 
-data "aws_ami" "rhel_7" {
+data "aws_ami" "rhel_8" {
   most_recent = true
   owners      = ["309956199498"]
 
- filter {
+  filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
 
-  name_regex = "^RHEL-7.*x86_64.*"
+  name_regex = "^RHEL-8.*x86_64.*"
 }
 
 # data "aws_ami" "amazon_linux_2" {
