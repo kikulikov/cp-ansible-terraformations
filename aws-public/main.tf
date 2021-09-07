@@ -91,11 +91,18 @@ resource "aws_security_group" "allow_public" {
     description = "Control Center"
   }
   ingress {
-    from_port   = 9092
-    to_port     = 9092
+    from_port   = 9091
+    to_port     = 9099
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
-    description = "Kafka"
+    description = "Kafka Primary"
+  }
+  ingress {
+    from_port   = 9191
+    to_port     = 9199
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "Kafka Extra"
   }
   ingress {
     from_port   = 8081
@@ -109,7 +116,14 @@ resource "aws_security_group" "allow_public" {
     to_port     = 8083
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
-    description = "Kafka"
+    description = "Kafka Connect"
+  }
+  ingress {
+    from_port   = 8090
+    to_port     = 8090
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    description = "Metadata Service"
   }
   egress {
     from_port   = 0
@@ -163,8 +177,8 @@ resource "aws_instance" "component" {
     Email   = "${var.resource_email}"
     Purpose = "${var.resource_purpose}"
   }
-  root_block_device { # TODO attach volumes
-    volume_size = 32
+  root_block_device {
+    volume_size = 256
     volume_type = "gp2"
   }
   associate_public_ip_address = true
