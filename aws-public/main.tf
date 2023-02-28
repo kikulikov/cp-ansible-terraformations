@@ -1,24 +1,36 @@
-# Terraform Code
-
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      Name            = var.resource_name
+      Owner           = var.resource_owner
+      Email           = var.resource_email
+      ics_owner_email = var.resource_email
+    }
+  }
+}
+
+resource "tls_private_key" "platform" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 resource "aws_key_pair" "platform" {
-  key_name   = var.ssh_key_name
-  public_key = file(var.ssh_public_key_path)
+  key_name   = "${var.resource_name}-terraform"
+  public_key = tls_private_key.platform.public_key_openssh
+}
+
+output "aws_private_key" {
+  value     = tls_private_key.platform.private_key_pem
+  sensitive = true
 }
 
 resource "aws_vpc" "platform" {
   cidr_block           = var.aws_ipv4_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = {
-    Name    = var.resource_name
-    Owner   = var.resource_owner
-    Email   = var.resource_email
-    Purpose = var.resource_purpose
-  }
+
   count = var.aws_vpc_id != "" ? 0 : 1
 }
 
@@ -31,12 +43,7 @@ resource "aws_subnet" "platform" {
   cidr_block        = cidrsubnet(local.aws_ipv4_cidr, 3, 1)
   vpc_id            = local.aws_vpc_id
   availability_zone = var.aws_availability_zone
-  tags = {
-    Name    = var.resource_name
-    Owner   = var.resource_owner
-    Email   = var.resource_email
-    Purpose = var.resource_purpose
-  }
+
   count = var.aws_subnet_id != "" ? 0 : 1
 }
 
@@ -49,7 +56,7 @@ data "http" "myip" {
 }
 
 resource "aws_security_group" "allow_private" {
-  name        = "confluent-platform-allow-private"
+  name        = "${var.resource_name}-allow-private"
   description = "Allow private inbound traffic"
   vpc_id      = local.aws_vpc_id
   ingress {
@@ -57,23 +64,19 @@ resource "aws_security_group" "allow_private" {
     to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = ["${local.aws_ipv4_cidr}"]
+    description = "Ingress Allow All"
   }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name    = var.resource_name
-    Owner   = var.resource_owner
-    Email   = var.resource_email
-    Purpose = var.resource_purpose
+    cidr_blocks = ["${local.aws_ipv4_cidr}"]
+    description = "Egress Allow All"
   }
 }
 
 resource "aws_security_group" "allow_public" {
-  name        = "confluent-platform-allow-public"
+  name        = "${var.resource_name}-allow-public"
   description = "Allow public inbound traffic"
   vpc_id      = local.aws_vpc_id
   ingress {
@@ -126,16 +129,18 @@ resource "aws_security_group" "allow_public" {
     description = "Metadata Service"
   }
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Egress Allow HTTP"
   }
-  tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Egress Allow HTTPS"
   }
 }
 
@@ -172,14 +177,12 @@ resource "aws_instance" "component" {
     "${aws_security_group.allow_private.id}"
   ]
   tags = {
-    Name    = "${var.resource_name}-${each.value.instance_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
+    Component = each.value.instance_name
   }
   root_block_device {
     volume_size = 256
     volume_type = "gp2"
+    encrypted = true
   }
   associate_public_ip_address = true
   subnet_id                   = local.aws_subnet_id
@@ -189,12 +192,6 @@ resource "aws_instance" "component" {
 # resource "aws_eip" "platform_jumpbox" {
 #   instance = "${aws_instance.jumpbox.id}"
 #   vpc      = true
-#   tags = {
-#     Name    = "${var.resource_name}"
-#     Owner   = "${var.resource_owner}"
-#     Email   = "${var.resource_email}"
-#     Purpose = "${var.resource_purpose}"
-#   }
 # }
 
 # resource "aws_eip" "platform" {
@@ -206,13 +203,7 @@ resource "aws_instance" "component" {
 # Setting up an internet gateway
 resource "aws_internet_gateway" "platform" {
   vpc_id = local.aws_vpc_id
-  tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
-  }
-  
+
   # Skip for the existing VPC
   count = var.aws_vpc_id != "" ? 0 : 1
 }
@@ -220,17 +211,12 @@ resource "aws_internet_gateway" "platform" {
 # Setting up the route table
 resource "aws_route_table" "platform" {
   vpc_id = local.aws_vpc_id
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.platform[0].id
   }
-  tags = {
-    Name    = "${var.resource_name}"
-    Owner   = "${var.resource_owner}"
-    Email   = "${var.resource_email}"
-    Purpose = "${var.resource_purpose}"
-  }
-  
+
   # Skip for the existing VPC
   count = var.aws_vpc_id != "" ? 0 : 1
 }
@@ -239,7 +225,7 @@ resource "aws_route_table" "platform" {
 resource "aws_route_table_association" "platform" {
   subnet_id      = local.aws_subnet_id
   route_table_id = aws_route_table.platform[0].id
-  
+
   # Skip for the existing VPC
   count = var.aws_vpc_id != "" ? 0 : 1
 }

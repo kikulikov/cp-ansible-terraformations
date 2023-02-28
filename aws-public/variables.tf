@@ -15,11 +15,6 @@ variable "resource_email" {
   type        = string
 }
 
-variable "resource_purpose" {
-  description = "The `Purpose` tag to use for provisioned services (e.g. Testing CP 551)"
-  type        = string
-}
-
 variable "aws_region" {
   description = "The AWS region to use (e.g. eu-west-2)"
   type        = string
@@ -38,15 +33,15 @@ variable "ec2_ami_type" {
   default     = "ubuntu"
 }
 
-variable "ssh_key_name" {
-  description = "The key pair name (e.g. kirill-kulikov-ssh)"
-  type        = string
-}
+# variable "ssh_key_name" {
+#   description = "The key pair name (e.g. kirill-kulikov-ssh)"
+#   type        = string
+# }
 
-variable "ssh_public_key_path" {
-  description = "The path to the SSH public key (e.g. ~/.ssh/Kirill-Kulikov-Confluent.pub)"
-  type        = string
-}
+# variable "ssh_public_key_path" {
+#   description = "The path to the SSH public key (e.g. ~/.ssh/Kirill-Kulikov-Confluent.pub)"
+#   type        = string
+# }
 
 variable "component" {
   description = "Map of component names to configuration"

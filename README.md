@@ -2,6 +2,8 @@
 
 Terraform scripts to provision infrastructure for confluentinc/cp-ansible
 
+terraform output -state=demo.stockholm.tfstate -raw aws_private_key > demo.sweden.key
+
 ## Finding AWS AMI
 
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html
