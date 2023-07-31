@@ -1,0 +1,36 @@
+---
+all:
+  vars:
+    ansible_connection: ssh
+    ansible_user: ubuntu
+    ansible_become: true
+    ansible_ssh_private_key_file: demo.stockholm.key
+
+    jolokia_enabled: true
+    jmxexporter_enabled: true
+    # confluent_package_version: 7.3.1
+
+    required_total_memory_mb_kafka_broker: 2048
+    required_total_memory_mb_control_center: 4096
+
+zookeeper:
+  hosts:
+    ec2-13-48-56-240.eu-north-1.compute.amazonaws.com:
+      zookeeper_id: 0
+
+kafka_broker:
+  hosts:
+    ec2-13-53-206-162.eu-north-1.compute.amazonaws.com:
+      broker_id: 0
+    ec2-13-53-197-164.eu-north-1.compute.amazonaws.com:
+      broker_id: 1
+    ec2-13-48-10-101.eu-north-1.compute.amazonaws.com:
+      broker_id: 2
+
+schema_registry:
+  hosts:
+    ec2-13-49-49-24.eu-north-1.compute.amazonaws.com:
+
+control_center:
+  hosts:
+    ec2-13-51-194-118.eu-north-1.compute.amazonaws.com:

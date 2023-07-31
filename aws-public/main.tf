@@ -55,6 +55,10 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
+output "myip" {
+  value = data.http.myip
+}
+
 resource "aws_security_group" "allow_private" {
   name        = "${var.resource_name}-allow-private"
   description = "Allow private inbound traffic"
@@ -83,49 +87,49 @@ resource "aws_security_group" "allow_public" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "SSH"
   }
   ingress {
     from_port   = 9021
     to_port     = 9021
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Control Center"
   }
   ingress {
     from_port   = 9091
     to_port     = 9099
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Kafka Primary"
   }
   ingress {
     from_port   = 9191
     to_port     = 9199
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Kafka Extra"
   }
   ingress {
     from_port   = 8081
     to_port     = 8081
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Schema Registry"
   }
   ingress {
     from_port   = 8083
     to_port     = 8083
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Kafka Connect"
   }
   ingress {
     from_port   = 8090
     to_port     = 8090
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
     description = "Metadata Service"
   }
   egress {
